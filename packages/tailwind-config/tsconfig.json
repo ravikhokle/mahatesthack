@@ -1,0 +1,9 @@
+{
+  "extends": "@mahatest/typescript-config/base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler"
+  },
+  "include": ["index.ts"],
+  "exclude": ["node_modules"]
+}

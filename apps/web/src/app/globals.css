@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f4faf6;
+  --foreground: #0c1f18;
+  --brand: #1c7a52;
+  --brand-dark: #113f2e;
+  --surface: #ffffff;
+  --muted: #4a6358;
+  --ring: rgba(28, 122, 82, 0.35);
+  --gradient-a: #e8f6ee;
+  --gradient-b: #f7fcf9;
+  --gradient-c: #dcefe4;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100vh;
+  color: var(--foreground);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, var(--gradient-a), transparent 55%),
+    radial-gradient(900px 500px at 90% 0%, var(--gradient-c), transparent 50%),
+    linear-gradient(180deg, var(--gradient-b), var(--background));
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+::selection {
+  background: rgba(28, 122, 82, 0.2);
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-md bg-brand-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-md border border-brand-200 bg-white/80 px-4 py-2.5 text-sm font-medium text-brand-800 transition hover:border-brand-300 hover:bg-brand-50;
+  }
+
+  .input-field {
+    @apply w-full rounded-md border border-brand-200 bg-white px-3 py-2.5 text-sm text-ink outline-none transition placeholder:text-ink-soft focus:border-brand-500 focus:ring-2 focus:ring-[var(--ring)];
+  }
+
+  .panel {
+    @apply rounded-2xl border border-brand-100/80 bg-white/90 p-6 shadow-soft backdrop-blur-sm;
+  }
+}

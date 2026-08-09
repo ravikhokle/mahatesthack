@@ -1,0 +1,12 @@
+{
+  "name": "@mahatest/tailwind-config",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./index.ts",
+    "./postcss.config.js": "./postcss.config.js"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  }
+}

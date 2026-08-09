@@ -1,0 +1,44 @@
+{
+  "name": "@mahatest/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist .turbo",
+    "promote": "tsx scripts/promote-user.ts"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.1.2",
+    "@fastify/cors": "^11.3.0",
+    "@fastify/helmet": "^13.1.0",
+    "@fastify/jwt": "^10.2.0",
+    "@fastify/multipart": "^10.1.0",
+    "@fastify/static": "^10.1.0",
+    "@fastify/websocket": "^11.3.0",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.4.2",
+    "fastify": "^5.3.3",
+    "fastify-plugin": "^6.0.0",
+    "ioredis": "^5.11.1",
+    "jose": "^6.2.3",
+    "mongoose": "^9.7.4",
+    "nats": "^2.29.3",
+    "resend": "^6.17.2",
+    "zod": "^3.25.51"
+  },
+  "devDependencies": {
+    "@mahatest/eslint-config": "workspace:*",
+    "@mahatest/typescript-config": "workspace:*",
+    "@types/bcryptjs": "^3.0.0",
+    "@types/node": "^22.15.29",
+    "eslint": "^9.28.0",
+    "rimraf": "^6.0.1",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}
