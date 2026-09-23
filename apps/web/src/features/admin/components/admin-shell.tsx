@@ -20,9 +20,6 @@ const links: NavLink[] = [
   { href: '/admin/exams', label: 'Exams' },
   { href: '/admin/test-series', label: 'Test Series' },
   { href: '/admin/categories', label: 'Categories' },
-  { href: '/admin/blogs', label: 'Blogs' },
-  { href: '/admin/current-affairs', label: 'Current Affairs' },
-  { href: '/admin/notifications', label: 'Notifications' },
   { href: '/admin/reports', label: 'Reports' },
   { href: '/admin/settings', label: 'Settings', roles: ['super_admin'] },
 ];

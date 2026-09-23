@@ -51,6 +51,9 @@ export class AttemptService {
     if (!exam || exam.status !== 'published') {
       throw new AppError('Exam not found or not published', 404, 'NOT_FOUND');
     }
+    if (exam.generatedFor && exam.generatedFor.toString() !== userId) {
+      throw new AppError('Exam not found', 404, 'NOT_FOUND');
+    }
 
     const existing = await AttemptModel.findOne({
       examId,

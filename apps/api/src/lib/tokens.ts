@@ -1,7 +1,12 @@
-import { createHash, randomBytes } from 'node:crypto';
+import { createHash, randomBytes, randomInt } from 'node:crypto';
 
 export function generateOpaqueToken(bytes = 32): string {
   return randomBytes(bytes).toString('hex');
+}
+
+/** Generate a cryptographically secure 6-digit numeric OTP. */
+export function generateOtp(): string {
+  return randomInt(100000, 1000000).toString();
 }
 
 export function hashToken(token: string): string {

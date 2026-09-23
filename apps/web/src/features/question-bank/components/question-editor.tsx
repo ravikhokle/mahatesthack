@@ -25,6 +25,7 @@ type QuestionEditorProps = {
 export function QuestionEditor({ mode, initial }: QuestionEditorProps) {
   const router = useRouter();
   const accessToken = useAuthStore((state) => state.accessToken);
+  const hydrated = useAuthStore((state) => state.hydrated);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -78,11 +79,13 @@ export function QuestionEditor({ mode, initial }: QuestionEditorProps) {
   const questionType = watch('type');
 
   useEffect(() => {
-    if (!accessToken) {
+    if (!hydrated || !accessToken) {
       return;
     }
-    void qb.listTopics(accessToken).then((result) => setTopics(result.items));
-  }, [accessToken]);
+    qb.listTopics(accessToken)
+      .then((result) => setTopics(result.items))
+      .catch((err) => console.error('Failed to load topics:', err));
+  }, [accessToken, hydrated]);
 
   const toggleCorrect = (optionId: string) => {
     if (questionType === 'mcq_single') {

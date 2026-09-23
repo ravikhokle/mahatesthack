@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     template: '%s | MahaTest',
   },
   description:
-    'Fast, scalable mock test platform for SSC, Banking, Railway, UPSC, MPSC, and other government exams.',
+    'Fast, focused mock test platform for SSC exams.',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

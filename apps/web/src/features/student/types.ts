@@ -3,7 +3,6 @@ export type DashboardHome = {
     testsAttempted: number;
     averageScorePercent: number;
     averageAccuracy: number;
-    bookmarks: number;
     continueCount: number;
   };
   continueExams: Array<{
@@ -29,6 +28,9 @@ export type DashboardHome = {
     durationMinutes: number;
     questionCount: number;
     totalMarks: number;
+    isPersonalized?: boolean;
+    personalizedByAi?: boolean;
+    aiStudyTip?: string;
   }>;
 };
 

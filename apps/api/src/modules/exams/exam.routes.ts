@@ -33,6 +33,7 @@ export const examRoutes: FastifyPluginAsync = async (app) => {
         status: isStaff ? query.status : 'published',
         testSeriesId: query.testSeriesId,
         publishedOnly: !isStaff,
+        userId: isStaff ? undefined : request.user.sub,
       }),
     });
   });

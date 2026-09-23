@@ -15,8 +15,6 @@ export default function ProfilePage() {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const accessToken = useAuthStore((state) => state.accessToken);
-  const verificationLink = useAuthStore((state) => state.verificationLink);
-  const setVerificationLink = useAuthStore((state) => state.setVerificationLink);
   const setSession = useAuthStore((state) => state.setSession);
   const logout = useAuthStore((state) => state.logout);
   const hydrated = useAuthStore((state) => state.hydrated);
@@ -71,7 +69,8 @@ export default function ProfilePage() {
     try {
       const result = await resendVerification(accessToken);
       setMessage(result.message);
-      setVerificationLink(result.verificationLink ?? null);
+      // Navigate to verify-email page so they can enter the new OTP
+      router.push(`/verify-email?email=${encodeURIComponent(user!.email)}`);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not resend verification');
     }
@@ -128,14 +127,6 @@ export default function ProfilePage() {
           </div>
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
           {message ? <p className="text-sm text-brand-700">{message}</p> : null}
-          {verificationLink ? (
-            <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-              Verification email delivery is not configured locally. Open this link to verify:{' '}
-              <a href={verificationLink} className="font-medium underline break-all">
-                {verificationLink}
-              </a>
-            </p>
-          ) : null}
           <button type="submit" disabled={isSubmitting} className="btn-primary">
             {isSubmitting ? 'Saving…' : 'Save changes'}
           </button>

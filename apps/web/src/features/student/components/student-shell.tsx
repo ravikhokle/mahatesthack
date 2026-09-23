@@ -13,8 +13,6 @@ const links = [
   { href: '/dashboard/results', label: 'Results' },
   { href: '/dashboard/analytics', label: 'Analytics' },
   { href: '/dashboard/leaderboards', label: 'Leaderboards' },
-  { href: '/dashboard/bookmarks', label: 'Bookmarks' },
-  { href: '/dashboard/practice', label: 'Practice' },
 ];
 
 export function StudentShell({ children }: { children: ReactNode }) {

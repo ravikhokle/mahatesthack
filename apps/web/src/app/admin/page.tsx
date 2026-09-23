@@ -94,11 +94,7 @@ export default function AdminDashboardPage() {
             Categories {data.content.categories} · Topics {data.content.topics}
           </p>
           <p className="text-sm text-ink-muted">
-            Questions {data.content.questions} · Blogs {data.content.publishedBlogs}/
-            {data.content.blogs}
-          </p>
-          <p className="text-sm text-ink-muted">
-            Current affairs {data.content.currentAffairs} · Series {data.content.testSeries}
+            Questions {data.content.questions} · Series {data.content.testSeries}
           </p>
         </div>
         <div className="panel space-y-2 !p-4">
@@ -119,9 +115,6 @@ export default function AdminDashboardPage() {
           <p className="text-sm text-ink-muted">
             In progress {data.activity.attemptsInProgress} · Submitted{' '}
             {data.activity.attemptsSubmitted}
-          </p>
-          <p className="text-sm text-ink-muted">
-            Notifications sent {data.activity.notificationsSent}
           </p>
         </div>
       </div>
@@ -186,12 +179,6 @@ export default function AdminDashboardPage() {
           </Link>
           <Link href="/admin/exams" className="btn-secondary">
             Create exam
-          </Link>
-          <Link href="/admin/blogs" className="btn-secondary">
-            Write blog
-          </Link>
-          <Link href="/admin/notifications" className="btn-secondary">
-            Send notification
           </Link>
         </div>
       </div>

@@ -7,7 +7,12 @@ import type {
   ResetPasswordInput,
   UpdateProfileInput,
 } from './schemas';
-import type { AuthResponse, MessageResponse, ProfileResponse } from './types';
+import type {
+  AuthResponse,
+  MessageResponse,
+  ProfileResponse,
+  ResendVerificationResponse,
+} from './types';
 
 export function register(input: RegisterInput) {
   return apiRequest<AuthResponse>('/auth/register', {
@@ -53,17 +58,32 @@ export function resetPassword(token: string, input: ResetPasswordInput) {
   });
 }
 
-export function verifyEmail(token: string) {
+export function verifyEmail(email: string, otp: string) {
   return apiRequest<ProfileResponse>('/auth/verify-email', {
     method: 'POST',
-    body: { token },
+    body: { email, otp },
   });
 }
 
-export function resendVerification(accessToken: string) {
-  return apiRequest<MessageResponse>('/auth/resend-verification', {
+export function resendVerification(
+  tokenOrOptions?: string | { accessToken?: string; email?: string },
+  emailArg?: string,
+) {
+  let token: string | undefined;
+  let email: string | undefined;
+
+  if (typeof tokenOrOptions === 'string') {
+    token = tokenOrOptions;
+    email = emailArg;
+  } else if (tokenOrOptions) {
+    token = tokenOrOptions.accessToken;
+    email = tokenOrOptions.email;
+  }
+
+  return apiRequest<ResendVerificationResponse>('/auth/resend-verification', {
     method: 'POST',
-    accessToken,
+    accessToken: token,
+    body: email ? { email } : undefined,
   });
 }
 

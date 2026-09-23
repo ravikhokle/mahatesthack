@@ -31,11 +31,16 @@ export const resetPasswordBodySchema = z.object({
 });
 
 export const verifyEmailBodySchema = z.object({
-  token: z.string().min(20),
+  email: z.string().trim().email().toLowerCase(),
+  otp: z.string().length(6).regex(/^\d{6}$/, 'OTP must be exactly 6 digits'),
 });
 
 export const updateProfileBodySchema = z.object({
   name: z.string().trim().min(2).max(120).optional(),
+});
+
+export const resendVerificationBodySchema = z.object({
+  email: z.string().trim().email().toLowerCase().optional(),
 });
 
 export type RegisterBody = z.infer<typeof registerBodySchema>;
@@ -43,4 +48,5 @@ export type LoginBody = z.infer<typeof loginBodySchema>;
 export type ForgotPasswordBody = z.infer<typeof forgotPasswordBodySchema>;
 export type ResetPasswordBody = z.infer<typeof resetPasswordBodySchema>;
 export type VerifyEmailBody = z.infer<typeof verifyEmailBodySchema>;
+export type ResendVerificationBody = z.infer<typeof resendVerificationBodySchema>;
 export type UpdateProfileBody = z.infer<typeof updateProfileBodySchema>;

@@ -18,6 +18,9 @@ export function toPublicExam(doc: ExamDocument): PublicExam {
     status: doc.status,
     year: doc.year ?? null,
     quizDate: doc.quizDate ?? null,
+    isPersonalized: Boolean(doc.generatedFor),
+    personalizedByAi: doc.personalizedByAi ?? false,
+    aiStudyTip: doc.aiStudyTip ?? '',
     createdAt: doc.createdAt.toISOString(),
     updatedAt: doc.updatedAt.toISOString(),
   };

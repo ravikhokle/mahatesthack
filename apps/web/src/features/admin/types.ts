@@ -16,16 +16,12 @@ export type AdminDashboardStats = {
     exams: number;
     publishedExams: number;
     testSeries: number;
-    blogs: number;
-    publishedBlogs: number;
-    currentAffairs: number;
   };
   activity: {
     attemptsTotal: number;
     attemptsInProgress: number;
     attemptsSubmitted: number;
     attemptsEvaluated: number;
-    notificationsSent: number;
   };
   recent: {
     users: Array<{
@@ -60,35 +56,6 @@ export type AdminReports = {
     attempts: number;
     averageScore: number | null;
   }>;
-};
-
-export type PublicBlog = {
-  id: string;
-  title: string;
-  slug: string;
-  excerpt: string;
-  content: string;
-  coverImageUrl: string;
-  status: 'draft' | 'published';
-  authorId: string;
-  publishedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type PublicCurrentAffair = {
-  id: string;
-  title: string;
-  slug: string;
-  summary: string;
-  content: string;
-  category: string;
-  eventDate: string;
-  status: 'draft' | 'published';
-  authorId: string;
-  publishedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
 };
 
 export type PublicNotification = {

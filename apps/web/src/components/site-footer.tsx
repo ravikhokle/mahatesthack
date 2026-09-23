@@ -17,12 +17,6 @@ export function SiteFooter() {
             <Link href="/exam-prep" className="hover:text-white">
               Exam prep
             </Link>
-            <Link href="/blog" className="hover:text-white">
-              Blog
-            </Link>
-            <Link href="/current-affairs" className="hover:text-white">
-              Current affairs
-            </Link>
             <Link href="/faq" className="hover:text-white">
               FAQ
             </Link>

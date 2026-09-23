@@ -1,0 +1,46 @@
+# Build stage
+FROM node:20-alpine AS builder
+
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+WORKDIR /app
+
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY packages/ ./packages/
+COPY apps/api/package.json ./apps/api/package.json
+
+RUN pnpm install --frozen-lockfile
+
+COPY apps/api/ ./apps/api/
+RUN pnpm --filter @mahatest/api build
+
+# Production stage
+FROM node:20-alpine AS runner
+
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+WORKDIR /app
+
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY packages/ ./packages/
+COPY apps/api/package.json ./apps/api/package.json
+
+RUN pnpm install --frozen-lockfile --prod
+
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+
+RUN mkdir -p /app/apps/api/uploads && \
+    addgroup -g 1001 -S nodejs && \
+    adduser -S fastify -u 1001 && \
+    chown -R fastify:nodejs /app/apps/api/uploads
+
+USER fastify
+
+WORKDIR /app/apps/api
+
+EXPOSE 4000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:4000/health || exit 1
+
+CMD ["node", "dist/index.js"]

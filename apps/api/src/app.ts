@@ -17,6 +17,7 @@ import { mongoosePlugin } from './plugins/mongoose.js';
 import { natsPlugin } from './plugins/nats.js';
 import { redisPlugin } from './plugins/redis.js';
 import { securityPlugins } from './plugins/security.js';
+import { seedAdminAccounts, seedSscContent } from './lib/seed.js';
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({
@@ -56,6 +57,8 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   await app.register(securityPlugins);
   await app.register(mongoosePlugin);
+  await seedAdminAccounts(app.log); // Seed admin accounts from .env on startup
+  await seedSscContent(app.log);
   await app.register(redisPlugin);
   await app.register(natsPlugin);
 

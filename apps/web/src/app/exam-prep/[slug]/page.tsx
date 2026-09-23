@@ -49,10 +49,10 @@ export default async function ExamPrepTrackPage({ params }: PageProps) {
           <p className="mt-4 max-w-xl text-base text-brand-100/85">{track.tagline}</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
-              href="/register"
+              href="/exams"
               className="inline-flex items-center justify-center rounded-md bg-white px-6 py-2.5 text-sm font-medium text-brand-900 transition hover:bg-brand-50"
             >
-              Start free
+              Start exam
             </Link>
             <Link
               href="/exams"

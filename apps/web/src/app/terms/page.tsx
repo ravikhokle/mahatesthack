@@ -37,7 +37,7 @@ export default function TermsPage() {
         <section>
           <h2 className="font-display text-2xl text-brand-950">Content and exams</h2>
           <p className="mt-3">
-            Questions, blogs, current affairs, and mock papers are for personal educational use.
+            Questions and mock papers are for personal educational use.
             Redistribution, scraping, or commercial reuse without permission is prohibited. Scores
             are practice indicators, not official exam results.
           </p>

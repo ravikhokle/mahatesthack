@@ -18,19 +18,12 @@ const queryClient = new QueryClient({
 
 function AuthBootstrap({ children }: { children: ReactNode }) {
   const bootstrap = useAuthStore((state) => state.bootstrap);
-  const hydrated = useAuthStore((state) => state.hydrated);
 
+  // Silently refresh the session in the background on mount.
+  // We no longer block rendering — pages handle their own auth requirements.
   useEffect(() => {
     void bootstrap();
   }, [bootstrap]);
-
-  if (!hydrated) {
-    return (
-      <div className="flex min-h-screen items-center justify-center text-sm text-ink-soft">
-        Loading MahaTest…
-      </div>
-    );
-  }
 
   return children;
 }

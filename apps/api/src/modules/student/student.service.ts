@@ -35,7 +35,12 @@ export class StudentService {
     const [inProgress, evaluated, publishedExams, bookmarks] = await Promise.all([
       AttemptModel.find({ userId, status: 'in_progress' }).sort({ updatedAt: -1 }).limit(5),
       AttemptModel.find({ userId, status: 'evaluated' }).sort({ submittedAt: -1 }).limit(5),
-      ExamModel.find({ status: 'published' }).sort({ createdAt: -1 }).limit(6),
+      ExamModel.find({
+        status: 'published',
+        $or: [{ generatedFor: null }, { generatedFor: new Types.ObjectId(userId) }],
+      })
+        .sort({ createdAt: -1 })
+        .limit(6),
       BookmarkModel.countDocuments({ userId }),
     ]);
 
@@ -107,6 +112,9 @@ export class StudentService {
         durationMinutes: exam.durationMinutes,
         questionCount: exam.questionIds.length,
         totalMarks: exam.totalMarks,
+        isPersonalized: Boolean(exam.generatedFor),
+        personalizedByAi: exam.personalizedByAi ?? false,
+        aiStudyTip: exam.aiStudyTip ?? '',
       })),
     };
   }
@@ -193,7 +201,7 @@ export class StudentService {
 
     const match: Record<string, unknown> = { status: 'evaluated' };
     if (examId) {
-      match.examId = examId;
+      match.examId = new Types.ObjectId(examId);
     }
 
     const rows = await AttemptModel.aggregate<{

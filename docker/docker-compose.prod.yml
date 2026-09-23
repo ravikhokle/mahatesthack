@@ -1,0 +1,59 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASS}
+    volumes:
+      - mahatest_mongo:/data/db
+    networks:
+      - internal
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - mahatest_redis:/data
+    networks:
+      - internal
+
+  nats:
+    image: nats:2.10-alpine
+    restart: always
+    command: ["-js", "-m", "8222"]
+    networks:
+      - internal
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    restart: always
+    env_file: .env.production
+    ports:
+      - "4000:4000"
+    volumes:
+      - api_uploads:/app/apps/api/uploads
+    depends_on:
+      - mongo
+      - redis
+      - nats
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  mahatest_mongo:
+  mahatest_redis:
+  api_uploads:
+
+networks:
+  internal:
+    driver: bridge

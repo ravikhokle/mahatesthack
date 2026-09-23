@@ -28,6 +28,7 @@
     "jose": "^6.2.3",
     "mongoose": "^9.7.4",
     "nats": "^2.29.3",
+    "nodemailer": "^10.0.8",
     "resend": "^6.17.2",
     "zod": "^3.25.51"
   },
@@ -36,6 +37,7 @@
     "@mahatest/typescript-config": "workspace:*",
     "@types/bcryptjs": "^3.0.0",
     "@types/node": "^22.15.29",
+    "@types/nodemailer": "^8.0.1",
     "eslint": "^9.28.0",
     "rimraf": "^6.0.1",
     "tsx": "^4.19.4",

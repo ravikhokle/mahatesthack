@@ -17,8 +17,8 @@ export default function PrivacyPage() {
         <section>
           <h2 className="font-display text-2xl text-brand-950">What we collect</h2>
           <p className="mt-3">
-            Account details (name, email, password hash), exam attempt data, bookmarks, practice
-            sessions, and messages you send through Contact. Optional: device and browser data
+            Account details (name, email, password hash), exam attempt data, and messages you send
+            through Contact. Optional: device and browser data
             needed for session security.
           </p>
         </section>

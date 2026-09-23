@@ -1,6 +1,7 @@
 import { QuestionModel } from '../question-bank/question.model.js';
 import { AttemptModel, type AttemptDocument } from './attempt.model.js';
 import { ExamModel } from './exam.model.js';
+import { PersonalizedExamService } from './personalized-exam.service.js';
 import type { ExamAnswerState } from './types.js';
 
 function sameSet(a: string[], b: string[]): boolean {
@@ -12,6 +13,8 @@ function sameSet(a: string[], b: string[]): boolean {
 }
 
 export class EvaluationService {
+  private readonly personalizedExams = new PersonalizedExamService();
+
   async evaluateAttempt(attemptId: string): Promise<AttemptDocument> {
     const attempt = await AttemptModel.findById(attemptId);
     if (!attempt) {
@@ -90,6 +93,8 @@ export class EvaluationService {
     }
 
     await attempt.save();
+    await this.personalizedExams.archiveIfMastered(attempt._id.toString());
+    await this.personalizedExams.createFromAttempt(attempt._id.toString());
     return attempt;
   }
 }

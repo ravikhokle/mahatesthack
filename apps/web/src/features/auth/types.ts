@@ -11,12 +11,14 @@ export type AuthUser = {
 export type AuthResponse = {
   user: AuthUser;
   accessToken: string;
-  verificationLink?: string;
 };
 
 export type MessageResponse = {
   message: string;
-  verificationLink?: string;
+};
+
+export type ResendVerificationResponse = {
+  message: string;
 };
 
 export type ProfileResponse = {

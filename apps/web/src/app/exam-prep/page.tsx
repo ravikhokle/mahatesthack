@@ -5,7 +5,7 @@ import { EXAM_TRACKS } from '@/features/website/content';
 
 export const metadata: Metadata = {
   title: 'Exam Prep',
-  description: 'SSC, Banking, Railway, UPSC, and State PSC mock test tracks on MahaTest.',
+  description: 'SSC mock test tracks on MahaTest.',
 };
 
 export default function ExamPrepHubPage() {

@@ -23,8 +23,7 @@ export default function HomePage() {
               Premium mock tests for government exams.
             </h1>
             <p className="mt-4 max-w-lg text-base text-brand-100/85 sm:text-lg">
-              Train for SSC, Banking, Railway, UPSC, and state exams with a timed, offline-safe
-              engine built for serious aspirants.
+              Train for SSC exams with a timed, offline-safe engine built for serious aspirants.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
@@ -89,31 +88,6 @@ export default function HomePage() {
               </li>
             ))}
           </ul>
-        </div>
-      </section>
-
-      <section className="mx-auto w-full max-w-6xl px-4 py-20 sm:px-6">
-        <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-600">
-              Stay current
-            </p>
-            <h2 className="mt-3 font-display text-3xl text-brand-950 sm:text-4xl">
-              Blogs and current affairs for the week you are in.
-            </h2>
-            <p className="mt-4 max-w-xl text-base text-ink-muted">
-              Strategy notes from the content team, plus dated affairs you can revise before
-              Prelims-style papers.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Link href="/blog" className="btn-primary px-6">
-              Read the blog
-            </Link>
-            <Link href="/current-affairs" className="btn-secondary px-6">
-              Current affairs
-            </Link>
-          </div>
         </div>
       </section>
 

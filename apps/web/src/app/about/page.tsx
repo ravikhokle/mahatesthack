@@ -21,8 +21,8 @@ export default function AboutPage() {
         </p>
         <p>
           Content managers curate taxonomy and questions; students practice, attempt full mocks, and
-          track analytics from a single dashboard. The public site shares blogs, current affairs,
-          and exam-track pages to help you choose a path.
+          track analytics from a single dashboard. The public site shares exam-track pages to help
+          you choose a path.
         </p>
         <p>
           We keep the product modular — Next.js for the website and dashboards, Fastify for APIs,

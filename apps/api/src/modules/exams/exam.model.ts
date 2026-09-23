@@ -21,6 +21,15 @@ const examSchema = new Schema(
     year: { type: Number, default: null },
     quizDate: { type: String, default: null, index: true },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    generatedFor: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
+    personalizationSourceAttemptId: {
+      type: Schema.Types.ObjectId,
+      ref: 'ExamAttempt',
+      default: null,
+      index: true,
+    },
+    personalizedByAi: { type: Boolean, default: false, index: true },
+    aiStudyTip: { type: String, default: '', maxlength: 240 },
   },
   { timestamps: true, versionKey: false },
 );

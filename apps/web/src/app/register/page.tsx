@@ -15,7 +15,6 @@ import { ApiError } from '@/lib/api';
 export default function RegisterPage() {
   const router = useRouter();
   const setSession = useAuthStore((state) => state.setSession);
-  const setVerificationLink = useAuthStore((state) => state.setVerificationLink);
   const [formError, setFormError] = useState<string | null>(null);
 
   const {
@@ -31,8 +30,8 @@ export default function RegisterPage() {
     try {
       const result = await registerUser(values);
       setSession(result.user, result.accessToken);
-      setVerificationLink(result.verificationLink ?? null);
-      router.push('/profile');
+      // Redirect to OTP verification page, pre-filling the email
+      router.push(`/verify-email?email=${encodeURIComponent(result.user.email)}`);
     } catch (error) {
       setFormError(error instanceof ApiError ? error.message : 'Registration failed');
     }

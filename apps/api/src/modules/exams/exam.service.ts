@@ -35,12 +35,16 @@ export class ExamService {
     status?: string;
     testSeriesId?: string;
     publishedOnly?: boolean;
+    userId?: string;
   }): Promise<PublicExam[]> {
     const query: Record<string, unknown> = {};
     if (filters.type) query.type = filters.type;
     if (filters.status) query.status = filters.status;
     if (filters.testSeriesId) query.testSeriesId = filters.testSeriesId;
     if (filters.publishedOnly) query.status = 'published';
+    if (filters.userId) {
+      query.$or = [{ generatedFor: null }, { generatedFor: filters.userId }];
+    }
 
     const docs = await ExamModel.find(query).sort({ createdAt: -1 });
     return docs.map(toPublicExam);

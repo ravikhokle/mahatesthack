@@ -51,8 +51,6 @@ export function SiteHeader() {
   const links = [
     { href: '/', label: 'Home' },
     { href: '/exam-prep', label: 'Exams' },
-    { href: '/blog', label: 'Blog' },
-    { href: '/current-affairs', label: 'Affairs' },
     ...(user
       ? [
           { href: '/exams', label: 'Mocks' },

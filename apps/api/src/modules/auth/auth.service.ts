@@ -11,6 +11,7 @@ import { AppError } from '../../lib/errors.js';
 import { hashPassword, verifyPassword } from '../../lib/password.js';
 import {
   generateOpaqueToken,
+  generateOtp,
   hashToken,
   refreshTokenTtlSeconds,
 } from '../../lib/tokens.js';
@@ -37,7 +38,6 @@ type AuthTokens = {
 type AuthResult = {
   user: PublicUser;
   accessToken: string;
-  verificationLink?: string;
 };
 
 function refreshKey(userId: string, tokenHash: string): string {
@@ -56,13 +56,7 @@ function cookieOptions(maxAgeSeconds: number) {
   };
 }
 
-function buildVerificationLink(token: string): string | undefined {
-  if (env.RESEND_API_KEY) {
-    return undefined;
-  }
 
-  return `${env.WEB_ORIGIN}/verify-email?token=${token}`;
-}
 
 async function signRefreshToken(userId: string): Promise<string> {
   const secret = new TextEncoder().encode(env.JWT_REFRESH_SECRET);
@@ -128,8 +122,8 @@ export class AuthService {
     }
 
     const passwordHash = await hashPassword(input.password);
-    const verificationToken = generateOpaqueToken();
-    const verificationHash = hashToken(verificationToken);
+    const otp = generateOtp();
+    const otpHash = hashToken(otp);
 
     const user = await UserModel.create({
       name: input.name,
@@ -137,22 +131,57 @@ export class AuthService {
       passwordHash,
       role: 'student',
       emailVerified: false,
-      emailVerificationTokenHash: verificationHash,
-      emailVerificationExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
+      emailVerificationTokenHash: otpHash,
+      emailVerificationExpiresAt: new Date(Date.now() + 1000 * 60 * 10), // 10 minutes
     });
 
-    const verifyUrl = `${env.WEB_ORIGIN}/verify-email?token=${verificationToken}`;
-    await sendEmail({
-      to: user.email,
-      subject: `Verify your ${env.APP_NAME} email`,
-      html: verificationEmailHtml(user.name, verifyUrl),
-    });
+    let emailSent = false;
+    let emailDeliveryNote: string | undefined;
+
+    try {
+      const emailResult = await sendEmail({
+        to: user.email,
+        subject: `${otp} is your ${env.APP_NAME} verification code`,
+        html: verificationEmailHtml(user.name, otp),
+      });
+      emailSent = emailResult.delivered;
+      if (!emailResult.delivered) {
+        emailDeliveryNote = emailResult.error;
+      }
+    } catch (error: any) {
+      if (env.NODE_ENV === 'development') {
+        this.app.log.warn(
+          { err: error?.message, email: user.email },
+          '[auth] Verification email delivery failed, proceeding in development mode',
+        );
+        emailDeliveryNote = error?.message;
+      } else {
+        await UserModel.deleteOne({ _id: user._id });
+        this.app.log.error({ err: error, email: user.email }, '[auth] verification email failed');
+        throw new AppError(
+          'We could not send the verification email. Check the email service configuration and try again.',
+          502,
+          'EMAIL_DELIVERY_FAILED',
+        );
+      }
+    }
+
+    // Always log OTP prominently in console
+    console.log('\n=============================================================');
+    console.log(`[AUTH] EMAIL VERIFICATION CODE FOR: ${user.email}`);
+    console.log(`>>> OTP: ${otp} <<<`);
+    if (!emailSent) {
+      console.log(`Note: Email was not delivered to mailbox (${emailDeliveryNote ?? 'provider limitation'}).`);
+      console.log('You can use the above OTP code to complete verification.');
+    }
+    console.log('=============================================================\n');
+
+    this.app.log.info({ email: user.email, otp }, '[auth] email verification OTP');
 
     const tokens = await this.issueTokens(user, reply);
     return {
       user: toPublicUser(user),
       accessToken: tokens.accessToken,
-      verificationLink: buildVerificationLink(verificationToken),
     };
   }
 
@@ -226,12 +255,17 @@ export class AuthService {
     await user.save();
 
     const resetUrl = `${env.WEB_ORIGIN}/reset-password?token=${resetToken}`;
-    await sendEmail({
-      to: user.email,
-      subject: `Reset your ${env.APP_NAME} password`,
-      html: resetPasswordEmailHtml(user.name, resetUrl),
-    });
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: `Reset your ${env.APP_NAME} password`,
+        html: resetPasswordEmailHtml(user.name, resetUrl),
+      });
+    } catch (err: any) {
+      this.app.log.warn({ err: err?.message, email: user.email }, '[auth] Forgot-password email delivery failed');
+    }
 
+    this.app.log.info({ email: user.email, resetUrl }, '[auth:dev] reset password URL');
     return { message };
   }
 
@@ -261,14 +295,15 @@ export class AuthService {
   }
 
   async verifyEmail(input: VerifyEmailBody): Promise<{ user: PublicUser }> {
-    const tokenHash = hashToken(input.token);
+    const otpHash = hashToken(input.otp);
     const user = await UserModel.findOne({
-      emailVerificationTokenHash: tokenHash,
+      email: input.email,
+      emailVerificationTokenHash: otpHash,
       emailVerificationExpiresAt: { $gt: new Date() },
     }).select('+emailVerificationTokenHash +emailVerificationExpiresAt');
 
     if (!user) {
-      throw new AppError('Invalid or expired verification token', 400, 'INVALID_TOKEN');
+      throw new AppError('Invalid or expired OTP. Please request a new code.', 400, 'INVALID_OTP');
     }
 
     user.emailVerified = true;
@@ -279,10 +314,21 @@ export class AuthService {
     return { user: toPublicUser(user) };
   }
 
-  async resendVerification(userId: string): Promise<{ message: string; verificationLink?: string }> {
-    const user = await UserModel.findById(userId).select(
-      '+emailVerificationTokenHash +emailVerificationExpiresAt',
-    );
+  async resendVerification(target: {
+    userId?: string;
+    email?: string;
+  }): Promise<{ message: string; devOtp?: string }> {
+    let user: UserDocument | null = null;
+    if (target.userId) {
+      user = await UserModel.findById(target.userId).select(
+        '+emailVerificationTokenHash +emailVerificationExpiresAt',
+      );
+    } else if (target.email) {
+      user = await UserModel.findOne({ email: target.email.toLowerCase().trim() }).select(
+        '+emailVerificationTokenHash +emailVerificationExpiresAt',
+      );
+    }
+
     if (!user) {
       throw new AppError('User not found', 404, 'NOT_FOUND');
     }
@@ -291,21 +337,55 @@ export class AuthService {
       return { message: 'Email is already verified.' };
     }
 
-    const verificationToken = generateOpaqueToken();
-    user.emailVerificationTokenHash = hashToken(verificationToken);
-    user.emailVerificationExpiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24);
+    const otp = generateOtp();
+    user.emailVerificationTokenHash = hashToken(otp);
+    user.emailVerificationExpiresAt = new Date(Date.now() + 1000 * 60 * 10); // 10 minutes
     await user.save();
 
-    const verifyUrl = `${env.WEB_ORIGIN}/verify-email?token=${verificationToken}`;
-    await sendEmail({
-      to: user.email,
-      subject: `Verify your ${env.APP_NAME} email`,
-      html: verificationEmailHtml(user.name, verifyUrl),
-    });
+    let emailSent = false;
+    let emailDeliveryNote: string | undefined;
+
+    try {
+      const emailResult = await sendEmail({
+        to: user.email,
+        subject: `${otp} is your ${env.APP_NAME} verification code`,
+        html: verificationEmailHtml(user.name, otp),
+      });
+      emailSent = emailResult.delivered;
+      if (!emailResult.delivered) {
+        emailDeliveryNote = emailResult.error;
+      }
+    } catch (error: any) {
+      if (env.NODE_ENV === 'development') {
+        this.app.log.warn(
+          { err: error?.message, email: user.email },
+          '[auth] Resend email delivery failed, proceeding in development mode',
+        );
+        emailDeliveryNote = error?.message;
+      } else {
+        throw new AppError(
+          'Failed to send verification email. Please check your configuration.',
+          502,
+          'EMAIL_DELIVERY_FAILED',
+        );
+      }
+    }
+
+    // Always log OTP prominently in console
+    console.log('\n=============================================================');
+    console.log(`[AUTH:RESEND] EMAIL VERIFICATION CODE FOR: ${user.email}`);
+    console.log(`>>> OTP: ${otp} <<<`);
+    if (!emailSent) {
+      console.log(`Note: Email was not delivered to mailbox (${emailDeliveryNote ?? 'provider limitation'}).`);
+    }
+    console.log('=============================================================\n');
+
+    this.app.log.info({ email: user.email, otp }, '[auth] email verification OTP (resend)');
 
     return {
-      message: 'Verification email sent.',
-      verificationLink: buildVerificationLink(verificationToken),
+      message: emailSent
+        ? 'A new 6-digit code has been sent to your email.'
+        : 'A new 6-digit verification code has been generated.',
     };
   }
 

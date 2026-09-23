@@ -88,13 +88,19 @@ export default function ExamResultPage() {
           <article key={item.questionId} className="panel !p-4">
             <div className="mb-2 flex flex-wrap gap-2 text-xs">
               <span className="rounded bg-brand-50 px-2 py-0.5 text-brand-800">Q{index + 1}</span>
-              <span
-                className={`rounded px-2 py-0.5 ${
-                  item.isCorrect ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-700'
-                }`}
-              >
-                {item.isCorrect ? 'Correct' : 'Incorrect'} · {item.marksAwarded} marks
-              </span>
+              {item.isCorrect ? (
+                <span className="rounded bg-emerald-100 px-2 py-0.5 text-emerald-800">
+                  Correct · +{item.marksAwarded} marks
+                </span>
+              ) : item.selectedOptionIds.length === 0 ? (
+                <span className="rounded bg-gray-100 px-2 py-0.5 text-gray-600">
+                  Not Attempted · 0 marks
+                </span>
+              ) : (
+                <span className="rounded bg-red-100 px-2 py-0.5 text-red-700">
+                  Incorrect · {item.marksAwarded} marks
+                </span>
+              )}
             </div>
             <div
               className="prose prose-sm max-w-none"

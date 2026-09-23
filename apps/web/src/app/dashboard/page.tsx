@@ -42,7 +42,7 @@ export default function DashboardHomePage() {
         </p>
         <h1 className="mt-2 font-display text-3xl text-brand-950">Hi, {firstName}</h1>
         <p className="mt-2 max-w-2xl text-sm text-ink-muted">
-          Continue where you left off, track progress, and practice weak areas — all in one place.
+          Continue where you left off, track progress, and review your mock results — all in one place.
         </p>
       </div>
 
@@ -50,7 +50,6 @@ export default function DashboardHomePage() {
         <StatCard label="Tests attempted" value={String(data.summary.testsAttempted)} />
         <StatCard label="Avg score" value={`${data.summary.averageScorePercent}%`} />
         <StatCard label="Avg accuracy" value={`${data.summary.averageAccuracy}%`} />
-        <StatCard label="Bookmarks" value={String(data.summary.bookmarks)} />
       </div>
 
       {data.continueExams.length > 0 ? (
@@ -125,6 +124,16 @@ export default function DashboardHomePage() {
               >
                 <p className="text-xs uppercase tracking-wide text-brand-600">{exam.type}</p>
                 <p className="mt-1 font-medium text-ink">{exam.title}</p>
+                {exam.isPersonalized ? (
+                  <>
+                    <p className="mt-1 text-xs font-medium text-brand-700">
+                      {exam.personalizedByAi ? 'AI plan built from your weak topics' : 'Built from your weak topics'}
+                    </p>
+                    {exam.aiStudyTip ? (
+                      <p className="mt-1 text-xs text-ink-soft">{exam.aiStudyTip}</p>
+                    ) : null}
+                  </>
+                ) : null}
                 <p className="text-xs text-ink-soft">
                   {exam.questionCount} Q · {exam.durationMinutes} min · {exam.totalMarks} marks
                 </p>

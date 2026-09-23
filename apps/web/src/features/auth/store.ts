@@ -9,11 +9,9 @@ import type { AuthUser } from './types';
 type AuthState = {
   user: AuthUser | null;
   accessToken: string | null;
-  verificationLink: string | null;
   hydrated: boolean;
   bootstrapping: boolean;
   setSession: (user: AuthUser, accessToken: string) => void;
-  setVerificationLink: (link: string | null) => void;
   clearSession: () => void;
   setHydrated: (value: boolean) => void;
   bootstrap: () => Promise<void>;
@@ -25,12 +23,11 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       user: null,
       accessToken: null,
-      verificationLink: null,
       hydrated: false,
       bootstrapping: false,
-      setSession: (user, accessToken) => set({ user, accessToken, verificationLink: null }),
-      setVerificationLink: (verificationLink) => set({ verificationLink }),
-      clearSession: () => set({ user: null, accessToken: null, verificationLink: null }),
+      setSession: (user, accessToken) =>
+        set({ user, accessToken, hydrated: true }),
+      clearSession: () => set({ user: null, accessToken: null }),
       setHydrated: (value) => set({ hydrated: value }),
       bootstrap: async () => {
         if (get().bootstrapping) {
@@ -40,23 +37,14 @@ export const useAuthStore = create<AuthState>()(
         set({ bootstrapping: true });
 
         try {
-          const token = get().accessToken;
-          if (token) {
-            try {
-              const profile = await authApi.getProfile(token);
-              set({ user: profile.user, accessToken: token, verificationLink: null });
-              return;
-            } catch {
-              // Access token expired — try refresh cookie next.
-            }
-          }
-
-          try {
-            const session = await authApi.refreshSession();
-            set({ user: session.user, accessToken: session.accessToken, verificationLink: null });
-          } catch {
-            set({ user: null, accessToken: null, verificationLink: null });
-          }
+          // Try to restore session via the httpOnly refresh cookie.
+          // Whether the user is already in localStorage or not, we always refresh
+          // to ensure the access token is valid and the server session is active.
+          const session = await authApi.refreshSession();
+          set({ user: session.user, accessToken: session.accessToken });
+        } catch {
+          // Refresh cookie is missing, expired, or revoked — clear any stale local state.
+          set({ user: null, accessToken: null });
         } finally {
           set({ bootstrapping: false, hydrated: true });
         }
@@ -70,7 +58,7 @@ export const useAuthStore = create<AuthState>()(
         } catch {
           // Still clear local session if API logout fails.
         } finally {
-          set({ user: null, accessToken: null, verificationLink: null });
+          set({ user: null, accessToken: null });
         }
       },
     }),
@@ -79,7 +67,6 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         user: state.user,
         accessToken: state.accessToken,
-        verificationLink: state.verificationLink,
       }),
       onRehydrateStorage: () => (state) => {
         state?.setHydrated(true);

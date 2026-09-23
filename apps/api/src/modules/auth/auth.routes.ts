@@ -5,6 +5,7 @@ import {
   forgotPasswordBodySchema,
   loginBodySchema,
   registerBodySchema,
+  resendVerificationBodySchema,
   resetPasswordBodySchema,
   updateProfileBodySchema,
   verifyEmailBodySchema,
@@ -59,8 +60,25 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     return reply.send(result);
   });
 
-  app.post('/resend-verification', { preHandler: authenticate }, async (request, reply) => {
-    const result = await authService.resendVerification(request.user.sub);
+  app.post('/resend-verification', async (request, reply) => {
+    let userId: string | undefined;
+    try {
+      await authenticate(request, reply);
+      userId = request.user?.sub;
+    } catch {
+      // Unauthenticated, check if email was supplied
+    }
+
+    const body = parseBody(resendVerificationBodySchema, request.body ?? {});
+    if (!userId && !body.email) {
+      return reply.status(400).send({
+        statusCode: 400,
+        code: 'VALIDATION_ERROR',
+        message: 'Please provide an email address or sign in first.',
+      });
+    }
+
+    const result = await authService.resendVerification({ userId, email: body.email });
     return reply.send(result);
   });
 

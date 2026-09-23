@@ -12,7 +12,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
     pathname.startsWith('/exams/attempts/') && !pathname.endsWith('/result');
 
   if (examPlayer) {
-    return <div className="min-h-screen">{children}</div>;
+    return <>{children}</>;
   }
 
   return (

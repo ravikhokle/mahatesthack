@@ -1,254 +1,230 @@
-# Government Exam Mock Test Platform named MahaTest
+# MahaTest
 
-A production-grade, high-performance online mock test platform inspired by Testbook, Oliveboard, and Adda247.
+MahaTest is an SSC mock-test platform for focused exam preparation. It combines a timed exam engine, a structured question bank, performance analytics, leaderboards, and automatically generated personalized tests based on weak topics.
 
-The platform is designed specifically for government exam aspirants and focuses on:
+The current product deliberately focuses on SSC exams. The web application does not expose Blog, Current Affairs, Practice, Bookmarks, or other exam categories.
 
-- Fast loading
-- Excellent Core Web Vitals
-- Offline-safe exam engine
-- High concurrency
-- Scalable architecture
-- SEO-first approach
-- Clean and maintainable code
+## Product Capabilities
 
----
+- SSC exam preparation across Reasoning, Quantitative Aptitude, English, and General Awareness
+- Published mock exams with timers, question palette, mark-for-review, autosave, and evaluation
+- Offline-safe local answer storage with API/WebSocket synchronization when available
+- Student dashboard with results, analytics, leaderboards, and active personalized tests
+- Admin question bank, taxonomy, exam, test-series, report, user, and settings workflows
+- Idempotent SSC seed data with original exam-style questions and published starter mocks
+- Personalized tests created after evaluation from weak topics and unseen published questions
+- Gemini-first personalization for test title, description, study tip, topic priority, question distribution, and difficulty
+- Deterministic rules-based fallback when Gemini is temporarily unavailable
 
-## Tech Stack
+## Architecture
 
-### Frontend
+```mermaid
+flowchart LR
+  subgraph Client[Client]
+    Browser[Next.js web app<br/>localhost:3000]
+    IDB[(IndexedDB<br/>local answers)]
+  end
 
-- Next.js 15 (App Router)
-- TypeScript
-- Tailwind CSS
-- shadcn/ui
-- Radix UI
-- Lucide React
-- Zustand
-- TanStack Query
-- React Hook Form
-- Zod
-- IndexedDB
+  subgraph Backend[Fastify API]
+    Gateway[REST + WebSocket<br/>gateway]
+    Auth[Auth and<br/>access control]
+    Exams[Exam and attempt<br/>services]
+    Eval[Deterministic<br/>evaluation]
+    Personalize[Personalization<br/>orchestrator]
+    Fallback[Rules<br/>fallback]
+  end
 
-### Backend
+  Gemini[Gemini API<br/>AI learning plan]
 
-- Node.js
-- Fastify
-- TypeScript
-- WebSocket
+  subgraph Data[Data services]
+    Mongo[(MongoDB<br/>users, questions, exams, results)]
+    Redis[(Redis<br/>live attempt state)]
+    NATS[NATS JetStream<br/>async evaluation]
+  end
 
-### Database
+  Browser -->|REST| Gateway
+  Browser <-->|WebSocket| Gateway
+  Browser <-->|Autosave| IDB
+  Gateway --> Auth
+  Auth --> Exams
+  Exams --> Mongo
+  Exams --> Redis
+  Exams -->|Submit| NATS
+  NATS -->|Job| Eval
+  Exams -.->|NATS down| Eval
+  Eval --> Mongo
+  Eval --> Personalize
+  Personalize -->|Metrics| Gemini
+  Gemini -->|AI plan| Personalize
+  Personalize -->|Questions and exam| Mongo
+  Personalize -.->|AI unavailable| Fallback
+  Fallback -->|Fallback plan| Mongo
+  Mongo -->|Recommendation| Gateway
+  Gateway -->|Dashboard| Browser
+```
 
-- MongoDB
-- Mongoose
+The main path is Gemini-first. NATS is optional because evaluation can run inline, but `GEMINI_API_KEY` should be configured for the intended AI personalization experience.
 
-### Cache
+Gemini never calculates marks, validates answers, authorizes users, or writes directly to MongoDB. Its output is parsed and validated before the API uses it. MongoDB remains the source of truth for questions and exams.
 
-- Redis
-
-### Queue
-
-- NATS JetStream
-
-### Storage
-
-- Cloudflare R2
-
-### CDN
-
-- Cloudflare
-
-### Email
-
-- Resend
-
-### Notifications
-
-- Firebase Cloud Messaging (Future)
-
----
-
-## Main Features
-
-- User Authentication
-- Question Bank
-- Mock Tests
-- Test Series
-- Previous Year Papers
-- Daily Quiz
-- Current Affairs
-- Blogs
-- Result Analysis
-- Leaderboards
-- Student Dashboard
-- Admin Dashboard
-- Offline Exam Engine
-- High Performance
-
----
-
-## Project Structure
+## Repository Layout
 
 ```text
 apps/
-  web/          Next.js 15 (App Router) — website, dashboards, SEO
-  api/          Fastify — REST APIs, auth, WebSocket gateway
+  web/                         Next.js website, auth, dashboards, exam UI
+  api/                         Fastify REST API, evaluation, WebSocket sync, seeding
 packages/
-  typescript-config/   Shared TSConfig presets
-  eslint-config/       Shared ESLint flat configs
-  tailwind-config/     Shared Tailwind theme (system fonts)
-docker/         Container definitions (later phase)
-
-ARCHITECTURE.md
-README.md
-TODO.md
-Copilot.md
-GUIDE.md
+  eslint-config/               Shared ESLint configuration
+  tailwind-config/             Shared Tailwind theme
+  typescript-config/           Shared TypeScript configuration
+docker/
+  docker-compose.yml           MongoDB, Redis, and NATS development services
+  docker-compose.prod.yml      Production service definitions
+README.md                      Project setup, architecture, and workflows
 ```
 
-**User guide:** see [`GUIDE.md`](./GUIDE.md) for visitors, students, content managers, and super admins.
+## Requirements
 
-### Commands
+- Node.js 20 or newer
+- pnpm 10 or newer
+- MongoDB
+- Redis
+- NATS is optional because the API has inline evaluation fallback
+- Gemini API key is required for the primary AI personalization path
+- Docker Desktop is optional when MongoDB and Redis are installed locally
+
+## Quick Start
+
+Install dependencies from the repository root:
 
 ```bash
-pnpm install          # Install dependencies
-docker compose -f docker/docker-compose.yml up -d   # MongoDB + Redis
-pnpm dev              # Start web (3000) + api (4000)
-pnpm build            # Build all packages/apps
-pnpm lint             # Lint all apps
-pnpm typecheck        # Typecheck all apps
-pnpm format           # Format with Prettier
+pnpm install
 ```
 
-Copy env files before first run:
+Start local infrastructure with Docker:
 
 ```bash
-cp apps/api/.env.example apps/api/.env
-cp apps/web/.env.example apps/web/.env.local
+docker compose -f docker/docker-compose.yml up -d mongo redis
 ```
 
-The web app calls the API through a same-origin proxy at `/backend/*` (see `NEXT_PUBLIC_API_URL`), so auth cookies work in local development.
-
-**MongoDB and Redis are both required.**
-
-### Install Redis (Windows)
-
-**Option A — winget (recommended)**
+Start the API and web app in separate terminals:
 
 ```bash
-winget install Redis.Redis --accept-package-agreements --accept-source-agreements
+pnpm --filter @mahatest/api dev
+pnpm --filter @mahatest/web dev
 ```
 
-Then start Redis (new terminal):
+Open:
+
+- Website: http://localhost:3000
+- API health: http://localhost:4000/health
+
+The API seeds admin accounts, SSC taxonomy, original questions, and starter exams when MongoDB is connected. Seeding is idempotent.
+
+Start NATS when asynchronous evaluation is desired:
 
 ```bash
-redis-server
-```
-
-Leave that window open. Verify:
-
-```bash
-redis-cli ping
-# expect: PONG
-```
-
-**Option B — Docker** (if you install Docker Desktop later)
-
-```bash
-docker compose -f docker/docker-compose.yml up -d redis
-```
-
-**Option C — WSL2**
-
-```bash
-wsl --install   # if WSL not installed yet, then reboot
-wsl sudo apt update && wsl sudo apt install -y redis-server
-wsl sudo service redis-server start
-wsl redis-cli ping
-```
-
-Default connection used by the API: `REDIS_URL=redis://127.0.0.1:6379` (already in `apps/api/.env`).
-
-### Auth
-
-API auth lives under `/auth/*` (JWT access token + httpOnly refresh cookie).  
-Web pages: `/register`, `/login`, `/forgot-password`, `/reset-password`, `/verify-email`, `/profile`.
-
-Without `RESEND_API_KEY`, verification/reset emails are printed to the API console in development.
-
-### Question Bank
-
-Admin UI: `/admin/question-bank` (requires `content_manager` or `super_admin`).
-
-```bash
-# After registering, promote your account:
-pnpm --filter @mahatest/api promote -- you@email.com content_manager
-```
-
-Then sign out/in and open **Admin** in the nav (`/admin`).
-
-### Mock Test Engine
-
-1. Publish questions in Question Bank  
-2. Create an exam at `/admin/exams`  
-3. Students open `/exams`, start a test (IndexedDB + timer + palette + WS sync)  
-4. After submit, view `/exams/attempts/:id/result`
-
-Optional NATS (async evaluation). Without it, evaluation runs inline:
-
-```bash
-# Docker
 docker compose -f docker/docker-compose.yml up -d nats
-
-# Or install NATS Server and run with JetStream enabled on port 4222
 ```
 
-`NATS_URL` defaults to `nats://127.0.0.1:4222`.
+Without NATS, exam evaluation runs inline in the API process.
 
-### Student Dashboard
+## Environment
 
-Signed-in students use `/dashboard` for home, my tests, continue exam, results, analytics, leaderboards, bookmarks, and practice.
+Create `apps/api/.env` with local values. Never commit this file or share its secrets.
 
-### Admin Dashboard
+Important variables:
 
-Staff (`content_manager` / `super_admin`) use `/admin` for overview, question bank, exams, test series, categories, blogs, current affairs, notifications, and reports. Super admins also manage users and platform settings.
+```dotenv
+NODE_ENV=development
+PORT=4000
+HOST=0.0.0.0
+MONGODB_URI=mongodb://127.0.0.1:27017/mahatest
+REDIS_URL=redis://127.0.0.1:6379
+WEB_ORIGIN=http://localhost:3000
+NATS_URL=nats://127.0.0.1:4222
 
-### Public Website
+# Required for Gemini-first personalized tests. The API accepts the legacy GeminiAPI name temporarily.
+GEMINI_API_KEY=replace-with-a-server-side-key
+GEMINI_MODEL=gemini-3.6-flash
 
-Marketing pages: `/` (landing), `/exam-prep`, `/blog`, `/current-affairs`, `/about`, `/contact`, `/faq`, `/privacy`, `/terms`. Published CMS content is served from `/public/*` APIs.
+SUPER_ADMIN_EMAIL=admin@example.com
+SUPER_ADMIN_PASSWORD=change-this-password
+SUPER_ADMIN_NAME=Super Admin
+```
 
-### Apps
+The web app uses a same-origin `/backend/*` rewrite to the API, which keeps local authentication cookies on the web origin. Without `GEMINI_API_KEY`, personalized tests still work through the deterministic fallback, but they will not receive AI-generated names, study tips, or adaptive distribution.
 
-| App | Port | Description |
-|-----|------|-------------|
-| `@mahatest/web` | 3000 | Next.js frontend |
-| `@mahatest/api` | 4000 | Fastify API (`GET /health`) |
+## Common Workflows
 
----
+### Student
 
-## Development Philosophy
+1. Register or sign in.
+2. Open **Exams** and select an SSC mock.
+3. Complete the timed attempt.
+4. Review the result and analytics.
+5. Open the dashboard recommendation created from weak topics.
+6. Personalized tests scoring 70% or higher are archived from active recommendations while their results remain available.
 
-- Performance First
-- TypeScript Everywhere
-- Mobile First
-- SEO Optimized
-- Reusable Components
-- Production Ready
-- Scalable Architecture
+### Content manager
 
----
+1. Register an account.
+2. Promote it from the API package:
+
+   ```bash
+   pnpm --filter @mahatest/api promote -- you@example.com content_manager
+   ```
+
+3. Sign out and sign in again.
+4. Use `/admin/question-bank` to manage taxonomy and questions.
+5. Use `/admin/exams` to create and publish SSC exams.
+
+### Seed content
+
+The startup seed creates or updates only records owned by the seed markers and known exam slugs. It does not delete user-created content.
+
+The current starter content includes:
+
+- 50 original SSC questions
+- Reasoning, Quantitative Aptitude, English, and General Awareness taxonomy
+- Three published 20-question SSC mocks
+
+## Validation Commands
+
+Run from the repository root:
+
+```bash
+pnpm typecheck
+pnpm lint
+pnpm build
+```
+
+Run package-specific checks:
+
+```bash
+pnpm --filter @mahatest/api typecheck
+pnpm --filter @mahatest/api lint
+pnpm --filter @mahatest/web typecheck
+pnpm --filter @mahatest/web lint
+pnpm --filter @mahatest/web build
+```
+
+Check service health:
+
+```bash
+curl http://localhost:4000/health
+```
+
+Expected API status includes MongoDB and Redis connectivity. NATS may report `inline-fallback` when it is not running.
+
+## Security Notes
+
+- Keep `apps/api/.env` out of Git.
+- Rotate any key or password that has been shared publicly.
+- Keep Gemini calls server-side only.
+- Do not send passwords, tokens, answer sheets, or private account data to Gemini.
+- Treat Gemini output as an untrusted recommendation and validate it before use.
 
 ## Documentation
 
-Read **ARCHITECTURE.md** before implementing any feature.
-
-It contains:
-
-- System Design
-- Folder Structure
-- Database Design
-- Workflows
-- Coding Standards
-- Performance Rules
-- Development Guidelines
-- Future Roadmap
+This README contains the current setup, architecture, development workflows, and operational guidance for the project.

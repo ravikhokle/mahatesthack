@@ -72,6 +72,9 @@ export type PublicExam = {
   status: ExamStatus;
   year: number | null;
   quizDate: string | null;
+  isPersonalized?: boolean;
+  personalizedByAi?: boolean;
+  aiStudyTip?: string;
   createdAt: string;
   updatedAt: string;
 };

@@ -4,8 +4,6 @@ import type {
   AdminDashboardStats,
   AdminReports,
   AdminUser,
-  PublicBlog,
-  PublicCurrentAffair,
   PublicNotification,
   PublicPlatformSettings,
 } from './types';
@@ -45,63 +43,6 @@ export function updateUserRole(
     method: 'PATCH',
     accessToken,
     body: { role },
-  });
-}
-
-export function listBlogs(accessToken: Token) {
-  return apiRequest<{ items: PublicBlog[] }>('/admin/blogs', { accessToken });
-}
-
-export function createBlog(accessToken: Token, body: Record<string, unknown>) {
-  return apiRequest<{ item: PublicBlog }>('/admin/blogs', {
-    method: 'POST',
-    accessToken,
-    body,
-  });
-}
-
-export function updateBlog(accessToken: Token, id: string, body: Record<string, unknown>) {
-  return apiRequest<{ item: PublicBlog }>(`/admin/blogs/${id}`, {
-    method: 'PATCH',
-    accessToken,
-    body,
-  });
-}
-
-export function deleteBlog(accessToken: Token, id: string) {
-  return apiRequest<void>(`/admin/blogs/${id}`, { method: 'DELETE', accessToken });
-}
-
-export function listCurrentAffairs(accessToken: Token) {
-  return apiRequest<{ items: PublicCurrentAffair[] }>('/admin/current-affairs', {
-    accessToken,
-  });
-}
-
-export function createCurrentAffair(accessToken: Token, body: Record<string, unknown>) {
-  return apiRequest<{ item: PublicCurrentAffair }>('/admin/current-affairs', {
-    method: 'POST',
-    accessToken,
-    body,
-  });
-}
-
-export function updateCurrentAffair(
-  accessToken: Token,
-  id: string,
-  body: Record<string, unknown>,
-) {
-  return apiRequest<{ item: PublicCurrentAffair }>(`/admin/current-affairs/${id}`, {
-    method: 'PATCH',
-    accessToken,
-    body,
-  });
-}
-
-export function deleteCurrentAffair(accessToken: Token, id: string) {
-  return apiRequest<void>(`/admin/current-affairs/${id}`, {
-    method: 'DELETE',
-    accessToken,
   });
 }
 
